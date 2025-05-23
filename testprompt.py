@@ -9,6 +9,7 @@ dataset_names = ['ml-1m']
 model_names = ['LightGCN']
 isHint = True
 
+#load kg info 
 output_df = pd.read_csv('output22.csv', sep='|', header=None, names=['movie_id', 'movie_name', 'encoding'])
 entity_df = pd.read_csv('only_entity-id.tsv', sep='\t', header=None, names=['encoding', 'translate1', 'translate2', 'translate3', 'entity_id'])
 kg_less_test_df = pd.read_csv('pretrain-_text_3.tsv', sep='\t', header=None, names=['head', 'relation', 'tail'])
@@ -20,6 +21,7 @@ movie_id_to_encoding = dict(zip(output_df['movie_id'], output_df['encoding']))
 entity_id_to_name = dict(zip(entity_df['entity_id'], entity_df['translate1']))
 relation_id_to_description = dict(zip(relations_df['relation_id'], relations_df['relation']))
 
+#input kg_triples
 def get_kg_triples_like_random(book_list, kg_id_df, kg_text_df, entity_to_name, relation_to_desc):
     triples = []
     
@@ -94,8 +96,9 @@ for dataset_name in dataset_names:
 
             testlist_ = [row['v' + str(ii)] for ii in range(1, 1 + 2 * kk)]
             
-
+            #input historical_triples
             historical_triples = get_kg_triples_like_random(trainlist, kg_less_test_id_df, kg_less_test_df, entity_id_to_name, relation_id_to_description)
+            #input candidate_triples
             candidate_triples = get_kg_triples_like_random(testlist_, kg_less_test_id_df, kg_less_test_df, entity_id_to_name, relation_id_to_description)
 
             like_kg = '; '.join(historical_triples) if historical_triples else 'None.'
