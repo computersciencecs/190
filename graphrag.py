@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from scipy.sparse import coo_matrix
 from tqdm import tqdm
 
+# ------------------------- GraphAttentionLayer -------------------------
 class GraphAttentionLayer(nn.Module):
     def __init__(self, in_features, out_features, dropout, alpha, concat=True):
         super(GraphAttentionLayer, self).__init__()
@@ -46,6 +47,7 @@ class GraphAttentionLayer(nn.Module):
         We_expanded = We.unsqueeze(0).expand(Wh.size(0), We.size(0), -1)
         return torch.cat((Wh_expanded.expand(-1, We.size(0), -1), We_expanded), dim=-1)
 
+# ------------------------- Utility Functions -------------------------
 def load_processed_data_with_mapping(id_path, text_path):
     id_data = pd.read_csv(id_path, sep="\t", header=None, names=["item", "relation", "entity"])
     text_data = pd.read_csv(text_path, sep="\t", header=None, names=["item", "relation", "entity"])
@@ -76,6 +78,7 @@ def initialize_embeddings(num_items, num_relations, num_entities, embedding_dim)
 
     return item_embeddings, relation_embeddings, entity_embeddings
 
+# ------------------------- Loss Function -------------------------
 def contrastive_loss(item_embeddings, entity_embeddings, adj, margin=1.0):
     pos_pairs = adj.nonzero()
     neg_pairs = torch.randint(0, adj.shape[0], pos_pairs.shape, device=item_embeddings.device)
@@ -85,7 +88,8 @@ def contrastive_loss(item_embeddings, entity_embeddings, adj, margin=1.0):
 
     loss = F.relu(margin + pos_dist - neg_dist).mean()
     return loss
-                
+
+# ------------------------- EarlyStopping  -------------------------
 class EarlyStopping:
     def __init__(self, patience=10, min_delta=1e-4):
         self.patience = patience
@@ -105,6 +109,7 @@ class EarlyStopping:
             if self.counter >= self.patience:
                 self.early_stop = True
 
+# ------------------------- Pretraining  -------------------------
 def pretrain_model(item_embeddings, entity_embeddings, adj, gat_layer, epochs=500, lr=0.001, patience=10):
     optimizer = torch.optim.Adam(list(gat_layer.parameters()) + [item_embeddings.weight, entity_embeddings.weight], lr=lr)
     adj_dense = adj.to_dense()
@@ -126,7 +131,8 @@ def pretrain_model(item_embeddings, entity_embeddings, adj, gat_layer, epochs=50
         if early_stopping.early_stop:
             print(f"Early stopping triggered at epoch {epoch + 1}.")
             break
-
+            
+# ------------------------- Similarity Computation -------------------------
 def compute_item_entity_similarity_in_batches(item_embeddings, entity_embeddings, adj, gat_layer, batch_size=5, chunk_size=50):
     similarity_scores = []
     num_items = item_embeddings.size(0)
@@ -154,6 +160,7 @@ def compute_item_entity_similarity_in_batches(item_embeddings, entity_embeddings
     assert similarity_scores.size(0) == num_items, "Mismatch in similarity scores length!"
     return similarity_scores
 
+# ------------------------- Extract Top Triples -------------------------
 def get_top_triples(similarity_scores, id_data, item_mapping, entity_mapping):
     top_triples_id = []
     reverse_item_mapping = {v: k for k, v in item_mapping.items()}
@@ -180,6 +187,8 @@ def get_top_triples(similarity_scores, id_data, item_mapping, entity_mapping):
         top_triples_id.append((item_id, original_relation_id, original_entity_id))
 
     return top_triples_id
+
+# ------------------------- Extract Top two Triples -------------------------
 def get_top_two_triples(similarity_scores, id_data, item_mapping, entity_mapping):
     top_triples_id = []
     reverse_item_mapping = {v: k for k, v in item_mapping.items()}
@@ -218,6 +227,7 @@ def save_triples_to_files(top_triples_id, id_output_path):
     id_df.to_csv(id_output_path, sep="\t", index=False, header=False)
     print(f"Saved ID triples to {id_output_path}")
 
+# ------------------------- Main Function -------------------------
 def main():
     device = torch.device("cpu")  
     print(f"Running on: {device}")
