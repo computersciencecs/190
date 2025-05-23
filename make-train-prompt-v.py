@@ -11,6 +11,7 @@ dataset_names = ['ml-1m']
 isHint = True
 sample_method = 'uniform'  
 
+#load info for kg
 output_df = pd.read_csv('output22.csv', sep='|', header=None, names=['movie_id', 'movie_name', 'encoding'])
 output_movie_id_types = output_df['movie_id'].apply(type).unique()
 entity_df = pd.read_csv('only_entity-id.tsv', sep='\t', header=None, names=['encoding', 'translate1', 'translate2', 'translate3', 'entity_id'])
@@ -24,6 +25,7 @@ movie_id_to_encoding = dict(zip(output_df['movie_id'], output_df['encoding']))
 entity_id_to_name = dict(zip(entity_df['entity_id'], entity_df['translate1']))
 relation_id_to_description = dict(zip(relations_df['relation_id'], relations_df['relation']))
 
+#load triples for like items
 def get_kg_triples_like_1(movie_list, kg_id_df, kg_text_df, entity_to_name, relation_to_desc):
     triples = []
     
@@ -44,7 +46,7 @@ def get_kg_triples_like_1(movie_list, kg_id_df, kg_text_df, entity_to_name, rela
     
     return triples
 
-
+#load triples for candidate items
 def get_kg_triples_wait_1(movie_list, kg_id_df, kg_text_df, entity_to_name, relation_to_desc):
     triples = []
     
@@ -70,7 +72,7 @@ def sort_list_reverse_with_indices(lst):
     sorted_indices = [index for index, _ in sorted_indices]
     return sorted_indices
 
-
+#load data
 for dataset_name in dataset_names:
     if dataset_name == 'ml-1m':
         df_like = pd.read_csv('./train_set.txt', names=['u', 'i', 'r', 't'], sep=' ')
@@ -385,7 +387,7 @@ for dataset_name in dataset_names:
             mes_list_pairwise.append(fi)
 
             '''
-            Listwise Ranking
+            Listwise Ranking ()for our experiments
             '''
 
             my_list = dfp['i'].tolist()
@@ -494,7 +496,9 @@ for dataset_name in dataset_names:
                     topkx = len(df) - 3
                 trainlist = my_list[:topk]
                 like_movie_ids = llike_list[:topkx]
+                #input historical_triples
                 historical_triples = get_kg_triples_like_1(like_movie_ids, kg_less_test_id_df, kg_less_test_df, entity_id_to_name, relation_id_to_description)
+                #input candidate_triples
                 candidate_triples = get_kg_triples_wait_1(total_list, kg_less_test_id_df, kg_less_test_df, entity_id_to_name, relation_id_to_description)
                 like_kg = '; '.join(historical_triples) if historical_triples else 'None.'
                 wait_kg = '; '.join(candidate_triples) if candidate_triples else 'None.'
