@@ -15,6 +15,7 @@ from huggingface_hub import login
 login(token=token, add_to_git_credential=True)
 MAX_INT = sys.maxsize
 
+#load fine-tuned model
 def load_finetuned_model(model_name, adapter_dir):
     model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16)
     tokenizer = AutoTokenizer.from_pretrained(model_name)l
@@ -45,7 +46,7 @@ def batch_data(data_list, batch_size=1):
 
 
 
-
+#inference
 def my_test(model_path, data_path, start=0, end=MAX_INT, batch_size=1, tensor_parallel_size=1):
     stop_tokens = []
     sampling_params = SamplingParams(temperature=0.1, top_k=40, top_p=0.1, max_tokens=2048,stop=stop_tokens)  
