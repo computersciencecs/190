@@ -24,7 +24,7 @@ def batch_data(data_list, batch_size=1):
 
 
 
-
+#inference
 def my_test(model, data_path, start=0, end=MAX_INT, batch_size=1, tensor_parallel_size=1):
     stop_tokens = []
     sampling_params = SamplingParams(temperature=0.1, top_k=40, top_p=0.1, max_tokens=2048,
