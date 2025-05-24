@@ -9,7 +9,7 @@ random.seed(42)
 np.random.seed(42)
 dataset_names = ['ml-1m']
 isHint = True
-sample_method = 'uniform'  
+sample_method = 'importance'  
 
 #load info for kg
 output_df = pd.read_csv('output22.csv', sep='|', header=None, names=['movie_id', 'movie_name', 'encoding'])
