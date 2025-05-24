@@ -110,8 +110,13 @@ for dataset_name in dataset_names:
             for j_ in testlist_:
                 try:
                     yy = cm_item[str(j_)]
-                    uu = cm_user[str(uni)]
-                    mf_label = mf_pred[uu][yy]
+                    uu = cm_user.get(str(uni), None)
+                    int_yy = int(j_)
+                    int_uu = int(uni)
+                    if int_uu < mf_pred.shape[0] and int_yy < mf_pred.shape[1]:
+                        mf_label = mf_pred[int_uu][int_yy]
+                    else:
+                        mf_label = 1.5
                 except Exception:
                     mf_label = 1.5
                 total_list_mf.append(mf_label)
@@ -120,6 +125,7 @@ for dataset_name in dataset_names:
             total_list_mf_idx = total_list_mf_idx[:5]
             total_list_mf_i = [testlist_[k_] for k_ in total_list_mf_idx]
             mf_item_sets_ = ', '.join([f'"{movie_name_dict[i]}"' for i in total_list_mf_i])
+            candidate_item_sets_ = ', '.join([f'"{movie_name_dict[i]}"' for i in testlist_])
 
             instruct0 = f'''You are a {kws} recommender system. Your task is to rank a given list of candidate {kws}s based on user preferences and return the top five recommendations.\n\n'''
 
